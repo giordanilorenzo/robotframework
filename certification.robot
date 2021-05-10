@@ -17,7 +17,7 @@ ${csv_directory}=    ${CURDIR}${/}output/csv
 ${receipts_directory}=    ${CURDIR}${/}output/receipts
 ${screenshots_directory}=    ${CURDIR}${/}output/screenshots
 ${archive_directory}=    ${CURDIR}${/}output/archive
-${zip_directory}=    ${CURDIR}${/}output/zip
+${zip_directory}=    ${CURDIR}${/}output
 
 *** Keywords ***
 Set up directories
@@ -25,17 +25,15 @@ Set up directories
     Create Directory    ${receipts_directory}
     Create Directory    ${screenshots_directory}
     Create Directory    ${archive_directory}
-    Create Directory    ${zip_directory}
     Empty Directory    ${csv_directory}
     Empty Directory    ${receipts_directory}
     Empty Directory    ${screenshots_directory}
     Empty Directory    ${archive_directory}
-    Empty Directory    ${zip_directory}
 
 *** Keywords ***
 Ask Zipname to User
     Create Form    Choose the archive zip name
-    Add Text Input    Zip name    zipname
+    Add Text Input    Zip name    zipname   Archive
     &{response}=    Request Response
     [Return]    ${response["zipname"]}
 
@@ -76,13 +74,15 @@ Fill And Preview The Robot For One Order
 *** Keywords ***
 Screenshot The Bot Preview
     [Arguments]    ${order}
-    Capture Element Screenshot    id:robot-preview    ${screenshots_directory}${/}screenshot_${order}[Order number].png
+    Scroll Element Into View    class:attribution
+    Sleep    1 second
+    Capture Element Screenshot    id:robot-preview-image    ${screenshots_directory}${/}screenshot_${order}[Order number].png
 
 *** Keywords ***
 Export The Receipt As A PDF
     [Arguments]    ${order}
     Click Button    id:order
-    Wait Until Page Contains Element    id:receipt   1min
+    Wait Until Page Contains Element    id:receipt
     ${receipt_html}=    Get Element Attribute    id:receipt    outerHTML
     Html To Pdf    ${receipt_html}    ${receipts_directory}${/}receipt_${order}[Order number].pdf
 
@@ -110,11 +110,11 @@ Close The Browser
 *** Tasks ***
 Open the website and submit orders
     Set up directories
-    Ask Zipname to User
+    ${zipname}=   Ask Zipname to User
     Read Secret Vault and Open the intranet website
     Download The Csv File
     Fill The Form Using The Data From The Csv File
-    Create ZIP package
+    Create ZIP package   ${zipname}
     [Teardown]    Close The Browser
 
 
